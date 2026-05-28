@@ -17,6 +17,7 @@ queries = [
     ("queries/02_revenue_trends.sql",    "revenue_trends"),
     ("queries/03_churn_risk.sql",        "churn_risk"),
     ("queries/04_category_analysis.sql", "category_analysis"),
+    ("queries/05_customer_and_delivery.sql", "customer_and_delivery"),
 ]
 
 for path, name in queries:

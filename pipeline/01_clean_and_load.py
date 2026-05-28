@@ -16,7 +16,7 @@ def main():
     con.execute("DROP SCHEMA IF EXISTS staging CASCADE")
     con.execute("CREATE SCHEMA staging")
 
-    print("Loading sellers...")
+    print("Creating sellers table...")
     con.execute(f"""
         CREATE TABLE staging.sellers AS
         SELECT
@@ -28,7 +28,7 @@ def main():
                            header=true, types={{'seller_zip_code_prefix': 'VARCHAR'}})
     """)
 
-    print("Loading products...")
+    print("Creating products table...")
     con.execute(f"""
         CREATE TABLE staging.products AS
         SELECT
@@ -43,14 +43,14 @@ def main():
         WHERE product_id IS NOT NULL
     """)
 
-    print("Loading category translation...")
+    print("Creating category translation table...")
     con.execute(f"""
         CREATE TABLE staging.category_translation AS
         SELECT product_category_name, product_category_name_english
         FROM read_csv_auto('{DATA_DIR}/product_category_name_translation.csv', header=true)
     """)
 
-    print("Loading orders...")
+    print("Creating orders table...")
     con.execute(f"""
         CREATE TABLE staging.orders AS
         SELECT
@@ -66,7 +66,7 @@ def main():
         WHERE order_purchase_timestamp IS NOT NULL
     """)
 
-    print("Loading order items...")
+    print("Creating order items table...")
     con.execute(f"""
         CREATE TABLE staging.order_items AS
         SELECT
@@ -80,7 +80,7 @@ def main():
         WHERE order_id IN (SELECT order_id FROM staging.orders)
     """)
 
-    print("Loading order payments...")
+    print("Creating order payments table...")
     con.execute(f"""
         CREATE TABLE staging.order_payments AS
         SELECT
@@ -93,6 +93,7 @@ def main():
     """)
 
     print("\nStaging layer complete.")
+    # Sanity check that the number of rows in each table is correct
     for table in ["sellers", "products", "orders", "order_items", "order_payments"]:
         n = con.execute(f"SELECT COUNT(*) FROM staging.{table}").fetchone()[0]
         print(f"   staging.{table}: {n:,} rows")

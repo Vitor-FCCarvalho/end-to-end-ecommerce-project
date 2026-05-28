@@ -1,11 +1,6 @@
 -- =============================================================================
 -- Category revenue performance: full monthly history with share analysis.
 -- One row per (category, month).
--- Use Power BI slicers to pin to a specific month for a snapshot view.
---
--- Replaces:
---   04_category_revenue_mix.sql  — latest-month snapshot with share delta
---   06_category_monthly_rank.sql — historical rank by month
 -- =============================================================================
 
 WITH
@@ -57,10 +52,10 @@ with_share AS (
         ROUND(
             monthly_revenue * 100.0
             / NULLIF(SUM(monthly_revenue) OVER (PARTITION BY month), 0)
-        , 2)                                                            AS revenue_share_pct,
+        , 2)                                                                AS revenue_share_pct,
         ROW_NUMBER() OVER (
             PARTITION BY month ORDER BY monthly_revenue DESC, category_name_en ASC
-        )                                                               AS rank_in_month
+        )                                                                   AS rank_in_month
     FROM monthly_category
 ),
 
@@ -71,12 +66,12 @@ with_delta AS (
         ROUND(
             revenue_share_pct
             - LAG(revenue_share_pct, 1) OVER (PARTITION BY category_name_en ORDER BY month)
-        , 2)                                                            AS share_delta_pp,
+        , 2)                                                                AS share_delta_pp,
         LAG(revenue_share_pct, 1) OVER (
             PARTITION BY category_name_en ORDER BY month
-        )                                                               AS prev_month_share_pct,
+        )                                                                   AS prev_month_share_pct,
         -- Per-category lifetime stats — same value for every row of a given category
-        COUNT(*) OVER (PARTITION BY category_name_en)                   AS months_active,
+        COUNT(*) OVER (PARTITION BY category_name_en)                       AS months_active,
         ROUND(AVG(monthly_revenue) OVER (PARTITION BY category_name_en), 2) AS avg_monthly_revenue,
         ROUND(MAX(monthly_revenue) OVER (PARTITION BY category_name_en), 2) AS peak_monthly_revenue
     FROM with_share
