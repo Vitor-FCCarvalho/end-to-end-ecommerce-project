@@ -1,5 +1,10 @@
 A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) connects ~3,000 independent sellers to consumers across the country. With over 100K orders across 74 product categories, the platform's core operational challenge is knowing **which parts of the business are healthy and which need attention** before problems show up in aggregate revenue.
 
+This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around four business questions. Note: even though data is available from October 2016 - September 2018, from October 10th - Decmber 23rd 2016 no sales data was recorded, so for the purpose of creating visuals I only consider the data from January 2017 onwards.
+
+---
+A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) connects ~3,000 independent sellers to consumers across the country. With over 100K orders across 74 product categories, the platform's core operational challenge is knowing **which parts of the business are healthy and which need attention** before problems show up in aggregate revenue.
+
 This project builds a full analytics stack on top of the Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of window-function-heavy SQL queries, and exports everything to a Power BI dashboard structured around five business questions.
 
 ## Dashboard
@@ -197,9 +202,14 @@ RETURN IF(ISBLANK(HasData) || HasData = 0, BLANK(), Intercept + Slope * CurrentX
 Kaggle API
     │
     ▼
+setup/01_import_data.py              # Download raw CSVs into data/
 setup/01_import_data.py              # Download raw CSVs → data/
     │
     ▼
+pipeline/01_clean_and_load.py        # Ingest -> DuckDB staging schema
+pipeline/02_validate.py              # Data quality checks
+pipeline/03_export_query_results.py  # Run analytical queries -> exports/
+pipeline/04_export_star_schema.py    # Build star schema -> exports/
 pipeline/01_clean_and_load.py        # Ingest → DuckDB staging schema
 pipeline/02_validate.py              # Data quality checks
 pipeline/03_export_query_results.py  # Run analytical queries and save them to exports/
@@ -207,8 +217,10 @@ pipeline/04_export_star_schema.py    # Build star schema and save it to exports/
     │
     ▼
 exports/star_schema/*.csv  ──────►  Power BI Dashboard
+exports/star_schema/*.csv  ──────►  Power BI Dashboard
 ```
 
+The entire pipeline runs via a single command (`python dagger/pipeline.py`) and completes in approximately 2 minutes.
 The entire pipeline runs via a single command (`python dagger/pipeline.py`) and completes in approximately 2 minutes.
 
 
@@ -229,7 +241,11 @@ Pre-computed tables for analyses that require window functions — rolling avera
 ---
 
 ## Star Schema Exports
+## Star Schema Exports
 
+Fact and dimension tables for interactive filtering and aggregation in Power BI.
+
+| File | Grain | Description |
 Fact and dimension tables for interactive filtering and aggregation in Power BI.
 
 | File | Grain | Description |
@@ -239,9 +255,15 @@ Fact and dimension tables for interactive filtering and aggregation in Power BI.
 | `dim_customer.csv` | unique customer | City, state, geolocation coordinates |
 | `dim_product.csv` | product SKU | English category name, dimensions, weight |
 | `dim_date.csv` | calendar date | Year, month, quarter, day name, weekend flag, ISO year-month label |
+| `fact_orders.csv` | order item | Revenue, freight, payment info, delivery timestamps, on-time delivery flag |
+| `dim_seller.csv` | seller | City, state, geolocation coordinates |
+| `dim_customer.csv` | unique customer | City, state, geolocation coordinates |
+| `dim_product.csv` | product SKU | English category name, dimensions, weight |
+| `dim_date.csv` | calendar date | Year, month, quarter, day name, weekend flag, ISO year-month label |
 
 ---
 
+## Tech Stack
 ## Tech Stack
 
 Python, SQL (DuckDB), Power BI.
