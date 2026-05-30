@@ -1,6 +1,6 @@
 A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) connects ~3,000 independent sellers to consumers across the country. With over 100K orders across 74 product categories, the platform's core operational challenge is knowing **which parts of the business are healthy and which need attention** before problems show up in aggregate revenue.
 
-This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around four business questions. Note: even though data is available from October 2016 - September 2018, from October 10th - Decmber 23rd 2016 no sales data was recorded, so for the purpose of creating visuals I only consider the data from January 2017 onwards.
+This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around five business questions. Note: even though data is available from October 2016 - September 2018, from October 10th - Decmber 23rd 2016 no sales data was recorded, so for the purpose of creating visuals I only consider the data from January 2017 onwards.
 
 ## Dashboard
 
@@ -209,7 +209,7 @@ pipeline/04_export_star_schema.py    # Build star schema -> exports/
 exports/star_schema/*.csv  ──────►  Power BI Dashboard
 ```
 
-The entire pipeline runs via a single command (`python dagger/pipeline.py`) and completes in approximately 2 minutes.
+The entire pipeline runs via a single command (`python dagger/pipeline.py`) and completes in approximately 1 minute.
 
 ---
 
