@@ -2,11 +2,6 @@ A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/
 
 This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around four business questions. Note: even though data is available from October 2016 - September 2018, from October 10th - Decmber 23rd 2016 no sales data was recorded, so for the purpose of creating visuals I only consider the data from January 2017 onwards.
 
----
-A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) connects ~3,000 independent sellers to consumers across the country. With over 100K orders across 74 product categories, the platform's core operational challenge is knowing **which parts of the business are healthy and which need attention** before problems show up in aggregate revenue.
-
-This project builds a full analytics stack on top of the Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of window-function-heavy SQL queries, and exports everything to a Power BI dashboard structured around five business questions.
-
 ## Dashboard
 
 **Page 1 — Market Overview**
@@ -17,10 +12,10 @@ This project builds a full analytics stack on top of the Olist dataset: a Python
 Before diving into sellers or categories, the first question any stakeholder asks is whether the top-line numbers are moving in the right direction. This page answers that with three lenses: headline KPIs, a revenue trend over the full dataset period, and a day-of-week breakdown.
 
 **Visuals:**
-- **KPI cards**: R$15.7M Gross Merchandise Value, R$160.2 Average Order Value, and 21.19% Year-over-Year revenue growth. These three numbers together capture scale, transaction quality, and momentum at a glance.
+- **KPI cards**: Three cards each showing a current-period value alongside its year-over-year comparison: GMV R$8.59M (+21.19% from last year), 53,531 Sales (+17.10% from last year), and AOV R$160.53 (+0.46% from last year).
 - **Gross Revenue Over Time**: a daily line chart overlaid with 7-day and 30-day moving averages. The raw daily signal is noisy, so the moving averages are able to better represent the underlying trend. A Black Friday spike in November 2017 is clearly visible and annotated (a great reference point for seasonality discussions).
 - **Average Revenue by Week Day**: a horizontal bar chart sorted by average revenue, showing that Monday (R$24.5K) and Tuesday (R$24.2K) are the strongest trading days, with revenue declining steadily through the week. Saturday (R$16.8K) and Sunday (R$17.6K) are the weakest days. This has direct implications for timing promotions, flash sales, and seller communication campaigns.
-- **Revenue Breakdown Over Location and Period**: a drillable matrix with Brazilian states as rows and calendar months as columns, showing gross revenue per state per month and row/column totals. The matrix makes it immediately obvious that São Paulo (SP) alone accounts for R$5.86M — 37% of total marketplace revenue — and that revenue is broadly seasonal across all states, not just the south-east.
+- **Revenue Breakdown Over Location and Period**: a drillable matrix with Brazilian states as rows and calendar months as columns, showing gross revenue per state per month and row/column totals. The matrix makes it immediately obvious that São Paulo (SP) alone accounts for R$5.86M (37% of total marketplace revenue) and that revenue is broadly seasonal across all states, not just the south-east.
 
 The rolling averages are computed in SQL for performance purposes and to avoid replicating complex window logic in DAX:
 
@@ -203,26 +198,18 @@ Kaggle API
     │
     ▼
 setup/01_import_data.py              # Download raw CSVs into data/
-setup/01_import_data.py              # Download raw CSVs → data/
     │
     ▼
 pipeline/01_clean_and_load.py        # Ingest -> DuckDB staging schema
 pipeline/02_validate.py              # Data quality checks
 pipeline/03_export_query_results.py  # Run analytical queries -> exports/
 pipeline/04_export_star_schema.py    # Build star schema -> exports/
-pipeline/01_clean_and_load.py        # Ingest → DuckDB staging schema
-pipeline/02_validate.py              # Data quality checks
-pipeline/03_export_query_results.py  # Run analytical queries and save them to exports/
-pipeline/04_export_star_schema.py    # Build star schema and save it to exports/
     │
     ▼
-exports/star_schema/*.csv  ──────►  Power BI Dashboard
 exports/star_schema/*.csv  ──────►  Power BI Dashboard
 ```
 
 The entire pipeline runs via a single command (`python dagger/pipeline.py`) and completes in approximately 2 minutes.
-The entire pipeline runs via a single command (`python dagger/pipeline.py`) and completes in approximately 2 minutes.
-
 
 ---
 
@@ -241,11 +228,7 @@ Pre-computed tables for analyses that require window functions — rolling avera
 ---
 
 ## Star Schema Exports
-## Star Schema Exports
 
-Fact and dimension tables for interactive filtering and aggregation in Power BI.
-
-| File | Grain | Description |
 Fact and dimension tables for interactive filtering and aggregation in Power BI.
 
 | File | Grain | Description |
@@ -255,15 +238,9 @@ Fact and dimension tables for interactive filtering and aggregation in Power BI.
 | `dim_customer.csv` | unique customer | City, state, geolocation coordinates |
 | `dim_product.csv` | product SKU | English category name, dimensions, weight |
 | `dim_date.csv` | calendar date | Year, month, quarter, day name, weekend flag, ISO year-month label |
-| `fact_orders.csv` | order item | Revenue, freight, payment info, delivery timestamps, on-time delivery flag |
-| `dim_seller.csv` | seller | City, state, geolocation coordinates |
-| `dim_customer.csv` | unique customer | City, state, geolocation coordinates |
-| `dim_product.csv` | product SKU | English category name, dimensions, weight |
-| `dim_date.csv` | calendar date | Year, month, quarter, day name, weekend flag, ISO year-month label |
 
 ---
 
-## Tech Stack
 ## Tech Stack
 
 Python, SQL (DuckDB), Power BI.
