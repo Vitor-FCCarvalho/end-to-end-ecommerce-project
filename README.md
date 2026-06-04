@@ -1,6 +1,6 @@
 A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) connects ~3,000 independent sellers to consumers across the country. With over 100K orders across 74 product categories, the platform's core operational challenge is knowing **which parts of the business are healthy and which need attention** before problems show up in aggregate revenue.
 
-This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around five business questions. Note: even though data is available from October 2016 - September 2018, from October 10th - Decmber 23rd 2016 no sales data was recorded, so for the purpose of creating visuals I only consider the data from January 2017 onwards.
+This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around five business questions. 
 
 ## Dashboard
 
@@ -166,9 +166,7 @@ Sellers and categories tell half the story. The other half is whether customers 
 - **Total Revenue per Customer Tier**: a pie chart breaking down total revenue by High (80th percentile and above), Mid (50th–80th percentile), and Low value customers. High-value customers account for 53.58% of total revenue (R$8.43M) despite being a minority (representing 20%) of the base, confirming that the Pareto dynamic seen on the seller side applies equally to the customer side.
 - **Customer Acquisition Over Time**: a line chart from January 2017 to August 2018 tracking new customers per cohort month, overlaid with a linear regression trend line computed in DAX. The trend is clearly upward across the period, confirming marketplace growth — but the seasonal volatility and the gap between trend and actuals in certain months also suggests acquisition is uneven rather than compounding steadily.
 
-The customer-level metrics are pre-computed in `queries/05_customer_and_delivery.sql`. A key design decision is that the query is driven by `all_customers`: every unique customer, including those whose only orders were canceled rather than by `customer_summary`, which is scoped to completed orders. This ensures that `SUM(canceled_orders)` across all rows equals the true marketplace-wide count of incomplete orders, making the cancellation rate a reliable KPI:
-
-The linear regression trend line on the acquisition chart is computed entirely in DAX using the least-squares method, with all variables declared before `RETURN` to comply with DAX syntax constraints:
+The linear regression trend line on the acquisition chart is computed entirely in DAX using the least-squares method:
 
 ```dax
 Trend_NewCustomers =
