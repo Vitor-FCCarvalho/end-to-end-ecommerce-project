@@ -1,6 +1,6 @@
 A Brazilian online marketplace ([Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) connects ~3,000 independent sellers to consumers across the country. With over 100K orders across 74 product categories, the platform's core operational challenge is knowing **which parts of the business are healthy and which need attention** before problems show up in aggregate revenue.
 
-This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around five business questions. 
+This project builds a full analytics stack on top of the publicly available Olist dataset: a Python/DuckDB pipeline that ingests raw Kaggle data, runs a set of SQL queries (incorporating CTEs and window functions), and exports everything to a Power BI dashboard structured around five business questions. You can interact with the full dashboard [here](https://app.powerbi.com/view?r=eyJrIjoiY2IyNTMxYWMtNDVjMy00YjgyLTkwOGQtNzhkYmRhZjU1YWI3IiwidCI6ImM0NjQzM2I0LWJlMjMtNDgxYi05ODkxLTc5Yzk3YTA2MmFlYyJ9). 
 
 ## Dashboard
 
