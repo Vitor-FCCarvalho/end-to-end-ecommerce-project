@@ -143,7 +143,7 @@ HAVING (DATE_TRUNC('month', order_date) + INTERVAL '1 month')
 ```
 
 **Page 5 — Customer & Delivery**
-![Customer & Delivery](dashboard/page5_customer_and_delivery.jpg)
+![Customer & Delivery](dashboard/page5_logistics.jpg)
 
 **Business question: Who are our customers, and are they getting a reliable delivery experience?**
 
