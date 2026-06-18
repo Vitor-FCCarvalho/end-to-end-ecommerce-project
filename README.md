@@ -17,17 +17,6 @@ Before diving into sellers or categories, the first question any stakeholder ask
 - **Average Revenue by Week Day**: a horizontal bar chart sorted by average revenue, showing that Monday (R$24.5K) and Tuesday (R$24.2K) are the strongest trading days, with revenue declining steadily through the week. Saturday (R$16.8K) and Sunday (R$17.6K) are the weakest days. This has direct implications for timing promotions, flash sales, and seller communication campaigns.
 - **Revenue Breakdown Over Location and Period**: a drillable matrix with Brazilian states as rows and calendar months as columns, showing gross revenue per state per month and row/column totals. The matrix makes it immediately obvious that São Paulo (SP) alone accounts for R$5.86M (37% of total marketplace revenue) and that revenue is broadly seasonal across all states, not just the south-east.
 
-The rolling averages are computed in SQL for performance purposes and to avoid replicating complex window logic in DAX:
-
-```sql
-ROUND(AVG(daily_gross_revenue)
-    OVER (ORDER BY order_date
-          ROWS BETWEEN 6 PRECEDING AND CURRENT ROW), 2)  AS revenue_7d_avg,
-
-ROUND(AVG(daily_gross_revenue)
-    OVER (ORDER BY order_date
-          ROWS BETWEEN 29 PRECEDING AND CURRENT ROW), 2) AS revenue_30d_avg
-```
 
 **Page 2 — Seller Performance**
 ![Seller Performance](dashboard/page2_seller_performance.jpg)
@@ -218,7 +207,6 @@ Pre-computed tables for analyses that require window functions — rolling avera
 | File | Rows | Description |
 |---|---|---|
 | `seller_profile.csv` | ~3,100 | Lifetime Pareto ranking + trailing 90-day activity per seller |
-| `revenue_trends.csv` | ~760 | Daily revenue with 7-day rolling average, 30-day rolling average, and WoW growth |
 | `churn_risk.csv` | ~2,100 | At-risk sellers with composite churn score (0–100), risk tier, and recommended action |
 | `category_analysis.csv` | ~1,300 | Full monthly history per category with revenue share, MoM delta, and share trend |
 | `customer_and_delivery.csv` | ~100K | One row per unique customer: revenue tier, cohort month, delivery experience, on-time counts, and cancellation history |

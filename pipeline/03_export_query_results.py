@@ -14,10 +14,9 @@ con.create_function("title_case", lambda s: s.title() if s else None, return_typ
 
 queries = [
     ("queries/01_seller_profile.sql",    "seller_profile"),
-    ("queries/02_revenue_trends.sql",    "revenue_trends"),
-    ("queries/03_churn_risk.sql",        "churn_risk"),
-    ("queries/04_category_analysis.sql", "category_analysis"),
-    ("queries/05_customer_and_delivery.sql", "customer_and_delivery"),
+    ("queries/02_churn_risk.sql",        "churn_risk"),
+    ("queries/03_category_analysis.sql", "category_analysis"),
+    ("queries/04_customer_and_delivery.sql", "customer_and_delivery"),
 ]
 
 for path, name in queries:

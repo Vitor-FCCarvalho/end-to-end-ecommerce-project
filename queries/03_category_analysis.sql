@@ -1,14 +1,15 @@
 -- =============================================================================
 -- Category revenue performance: full monthly history with share analysis.
--- One row per (category, month).
+-- One row per (category, month, state).
 -- =============================================================================
 
 WITH
--- Base: daily revenue per category aggregated from staging
+-- Base: daily revenue per category and state aggregated from staging
 daily_category_revenue AS (
     SELECT
         COALESCE(ct.product_category_name_english,
                  p.product_category_name, 'uncategorized')  AS category_name_en,
+        UPPER(TRIM(s.seller_state))                         AS seller_state,
         CAST(o.order_purchase_timestamp AS DATE)            AS order_date,
         SUM(oi.price + oi.freight_value)                    AS gross_revenue,
         COUNT(*)                                            AS items_sold,
@@ -17,11 +18,13 @@ daily_category_revenue AS (
     FROM staging.order_items oi
     JOIN staging.orders o   ON oi.order_id   = o.order_id
     JOIN staging.products p ON oi.product_id = p.product_id
+    JOIN staging.sellers s  ON oi.seller_id  = s.seller_id
     LEFT JOIN staging.category_translation ct
            ON p.product_category_name = ct.product_category_name
     WHERE o.order_status NOT IN ('canceled', 'unavailable')
     GROUP BY COALESCE(ct.product_category_name_english,
                       p.product_category_name, 'uncategorized'),
+             UPPER(TRIM(s.seller_state)),
              CAST(o.order_purchase_timestamp AS DATE)
 ),
 
@@ -29,21 +32,23 @@ daily_category_revenue AS (
 monthly_category AS (
     SELECT
         category_name_en,
+        seller_state,
         DATE_TRUNC('month', order_date)     AS month,
         SUM(gross_revenue)                  AS monthly_revenue,
         SUM(items_sold)                     AS monthly_items,
         MAX(active_sellers)                 AS active_sellers,
         ROUND(AVG(avg_item_price), 2)       AS avg_item_price
     FROM daily_category_revenue
-    GROUP BY category_name_en, DATE_TRUNC('month', order_date)
+    GROUP BY category_name_en, seller_state, DATE_TRUNC('month', order_date)
     HAVING (DATE_TRUNC('month', order_date) + INTERVAL '1 month')
                <= (SELECT MAX(order_date) FROM daily_category_revenue)
 ),
 
--- Add revenue share % and rank within each month
+-- Add revenue share % and rank within each (state, month)
 with_share AS (
     SELECT
         category_name_en,
+        seller_state,
         month,
         monthly_revenue,
         monthly_items,
@@ -51,34 +56,35 @@ with_share AS (
         avg_item_price,
         ROUND(
             monthly_revenue * 100.0
-            / NULLIF(SUM(monthly_revenue) OVER (PARTITION BY month), 0)
+            / NULLIF(SUM(monthly_revenue) OVER (PARTITION BY seller_state, month), 0)
         , 2)                                                                AS revenue_share_pct,
         ROW_NUMBER() OVER (
-            PARTITION BY month ORDER BY monthly_revenue DESC, category_name_en ASC
+            PARTITION BY seller_state, month ORDER BY monthly_revenue DESC, category_name_en ASC
         )                                                                   AS rank_in_month
     FROM monthly_category
 ),
 
--- Add MoM share delta and per-category lifetime summary (as window functions)
+-- Add MoM share delta and per-category-state lifetime summary
 with_delta AS (
     SELECT
         *,
         ROUND(
             revenue_share_pct
-            - LAG(revenue_share_pct, 1) OVER (PARTITION BY category_name_en ORDER BY month)
+            - LAG(revenue_share_pct, 1) OVER (PARTITION BY category_name_en, seller_state ORDER BY month)
         , 2)                                                                AS share_delta_pp,
         LAG(revenue_share_pct, 1) OVER (
-            PARTITION BY category_name_en ORDER BY month
+            PARTITION BY category_name_en, seller_state ORDER BY month
         )                                                                   AS prev_month_share_pct,
-        -- Per-category lifetime stats — same value for every row of a given category
-        COUNT(*) OVER (PARTITION BY category_name_en)                       AS months_active,
-        ROUND(AVG(monthly_revenue) OVER (PARTITION BY category_name_en), 2) AS avg_monthly_revenue,
-        ROUND(MAX(monthly_revenue) OVER (PARTITION BY category_name_en), 2) AS peak_monthly_revenue
+        -- Per-category-state lifetime stats
+        COUNT(*) OVER (PARTITION BY category_name_en, seller_state)                       AS months_active,
+        ROUND(AVG(monthly_revenue) OVER (PARTITION BY category_name_en, seller_state), 2) AS avg_monthly_revenue,
+        ROUND(MAX(monthly_revenue) OVER (PARTITION BY category_name_en, seller_state), 2) AS peak_monthly_revenue
     FROM with_share
 )
 
 SELECT
     title_case(REPLACE(category_name_en, '_', ' '))  AS category_name_en,
+    seller_state,
     CAST(month AS DATE)                              AS month,
     rank_in_month,
     ROUND(monthly_revenue, 2)                        AS monthly_revenue,
@@ -103,4 +109,4 @@ SELECT
         ELSE 'On Track'
     END AS revenue_vs_avg
 FROM with_delta
-ORDER BY month, rank_in_month;
+ORDER BY month, seller_state, rank_in_month;
