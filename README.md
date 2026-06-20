@@ -74,27 +74,31 @@ The risk score is a composite of four independently capped signals, each contrib
 ```sql
 -- S1: MoM revenue drop severity
 GREATEST(0, LEAST(25,
-    CASE WHEN prev_month_revenue > 0
-         THEN (prev_month_revenue - latest_revenue) / prev_month_revenue * 25
-         ELSE 0 END
+    CASE
+        WHEN prev_month_revenue > 0 THEN (prev_month_revenue - latest_revenue) / prev_month_revenue * 25
+        ELSE 0
+    END
 ))
 -- S2: 3-month revenue decay
 + GREATEST(0, LEAST(25,
-    CASE WHEN revenue_3m_ago > 0
-         THEN (revenue_3m_ago - latest_revenue) / revenue_3m_ago * 25
-         ELSE 0 END
+    CASE
+        WHEN revenue_3m_ago > 0 THEN (revenue_3m_ago - latest_revenue) / revenue_3m_ago * 25
+        ELSE 0
+    END
 ))
 -- S3: consecutive inactive months (gap-and-island)
 + GREATEST(0, LEAST(25,
-    CASE WHEN consecutive_zero_months >= 2
-         THEN (consecutive_zero_months - 1) * 25
-         ELSE 0 END
+    CASE
+        WHEN consecutive_zero_months >= 2 THEN (consecutive_zero_months - 1) * 25
+        ELSE 0
+    END
 ))
 -- S4: revenue below personal 6-month rolling baseline
 + GREATEST(0, LEAST(25,
-    CASE WHEN rolling_6m_avg > 0
-         THEN (rolling_6m_avg - latest_revenue) / rolling_6m_avg * 25
-         ELSE 0 END
+    CASE
+        WHEN rolling_6m_avg > 0 THEN (rolling_6m_avg - latest_revenue) / rolling_6m_avg * 25
+        ELSE 0
+    END
 ))
 ```
 
@@ -125,21 +129,18 @@ The revenue share is computed as a window function within each month, and the Mo
 
 ```sql
 ROUND(
-    monthly_revenue * 100.0
-    / NULLIF(SUM(monthly_revenue) OVER (PARTITION BY month), 0)
-, 2)                                                        AS revenue_share_pct,
+    monthly_revenue * 100.0 / NULLIF(SUM(monthly_revenue) OVER (PARTITION BY month), 0)
+, 2) AS revenue_share_pct,
 
 ROUND(
-    revenue_share_pct
-    - LAG(revenue_share_pct, 1) OVER (PARTITION BY category_name_en ORDER BY month)
-, 2)                                                        AS share_delta_pp
+    revenue_share_pct - LAG(revenue_share_pct, 1) OVER (PARTITION BY category_name_en ORDER BY month)
+, 2) AS share_delta_pp
 ```
 
 The latest complete month is determined dynamically so that a partially-elapsed month (e.g. a dataset that ends mid-September) does not distort the snapshot with one day's worth of data:
 
 ```sql
-HAVING (DATE_TRUNC('month', order_date) + INTERVAL '1 month')
-           <= (SELECT MAX(order_date) FROM daily_category_revenue)
+HAVING (DATE_TRUNC('month', order_date) + INTERVAL '1 month') <= (SELECT MAX(order_date) FROM daily_category_revenue)
 ```
 
 **Page 5 — Customer & Delivery**
